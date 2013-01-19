@@ -253,12 +253,9 @@ ready (model) ->
 
     return if money < value
     user.set 'stats.money', money - value
-    if type == 'armor'
-      user.set 'items.armor', index
-      model.set '_items.armor', content.items.armor[parseInt(index) + 1]
-    else if type == 'weapon'
-      user.set 'items.weapon', index
-      model.set '_items.weapon', content.items.weapon[parseInt(index) + 1]
+    if type == 'armor' || type == 'weapon'
+      user.set "items.#{type}", index
+      model.set "_items.#{type}", content.items[type][parseInt(index) + 1]
     else if type == 'potion'
       hp = user.get 'stats.hp'
       hp += 15
