@@ -207,7 +207,7 @@ ready (model) ->
   exports.clearCompleted = (e, el) ->
     _.each model.get('_completedList'), (task) ->
       model.del('_user.tasks.'+task.id)
-      user.set('.completedIds', [])
+      user.set('completedIds', [])
 
   exports.toggleDay = (e, el) ->
     task = model.at(e.target)
@@ -295,10 +295,10 @@ ready (model) ->
     user.set 'items',
       armor: 0
       weapon: 0
-    user.set('.balance', 2) if user.get('balance') < 2 #only if they haven't manually bought tokens
+    user.set('balance', 2) if user.get('balance') < 2 #only if they haven't manually bought tokens
 
   exports.closeKickstarterNofitication = (e, el) ->
-    user.set('.notifications.kickstarter', 'hide')
+    user.set('notifications.kickstarter', 'hide')
 
   # ========== CRON ==========
 
