@@ -79,6 +79,8 @@ get '/', (page, model, next) ->
 # ========== CONTROLLER FUNCTIONS ==========
 
 ready (model) ->
+  user = model.at '_user'
+
   require('./loadJavascripts')(model)
 
   # Setup model in scoring functions
@@ -135,7 +137,7 @@ ready (model) ->
       throw new Error("Direction neither 'up' nor 'down' on checkbox set.")
 
     # Score the user based on todo task
-    task = model.at("_user.tasks.#{i}")
+    task = user.at("tasks.#{i}")
     scoring.score(i, direction())
 
     # Then move the todos to/from _todoList/_completedList
@@ -205,7 +207,7 @@ ready (model) ->
   exports.clearCompleted = (e, el) ->
     _.each model.get('_completedList'), (task) ->
       model.del('_user.tasks.'+task.id)
-      model.set('_user.completedIds', [])
+      user.set('.completedIds', [])
 
   exports.toggleDay = (e, el) ->
     task = model.at(e.target)
@@ -244,7 +246,6 @@ ready (model) ->
     chart.draw(data, options)
 
   exports.buyItem = (e, el, next) ->
-    user = model.at '_user'
     #TODO: this should be working but it's not. so instead, i'm passing all needed values as data-attrs
     # item = model.at(e.target)
 
@@ -271,7 +272,11 @@ ready (model) ->
 
   exports.revive = (e, el) ->
     stats = model.at '_user.stats'
-    stats.set 'hp', 50; stats.set 'lvl', 1; stats.set 'exp', 0; stats.set 'money', 0
+    stats.set
+      hp: 50
+      lvl: 1
+      exp: 0
+      money: 0
     model.set '_user.items.armor', 0
     model.set '_user.items.weapon', 0
     model.set '_items.armor', content.items.armor[1]
@@ -282,16 +287,16 @@ ready (model) ->
     _.each ['habit', 'daily', 'todo', 'completed', 'reward'], (type) ->
       model.set "_user.#{type}Ids", []
       model.refList "_#{type}List", "_user.tasks", "_user.#{type}Ids"
-    model.set('_user.stats.hp', 50)
-    model.set('_user.stats.money', 0)
-    model.set('_user.stats.exp', 0)
-    model.set('_user.stats.lvl', 1)
-    model.set('_user.items.armor',0)
-    model.set('_user.items.weapon',0)
-    model.set('_user.balance', 2) if model.get('_user.balance') < 2 #only if they haven't manually bought tokens
+    user.set('.stats.hp', 50)
+    user.set('.stats.money', 0)
+    user.set('.stats.exp', 0)
+    user.set('.stats.lvl', 1)
+    user.set('.items.armor',0)
+    user.set('.items.weapon',0)
+    user.set('.balance', 2) if user.get('balance') < 2 #only if they haven't manually bought tokens
 
   exports.closeKickstarterNofitication = (e, el) ->
-    model.set('_user.notifications.kickstarter', 'hide')
+    user.set('.notifications.kickstarter', 'hide')
 
   # ========== CRON ==========
 
