@@ -287,12 +287,14 @@ ready (model) ->
     _.each ['habit', 'daily', 'todo', 'completed', 'reward'], (type) ->
       model.set "_user.#{type}Ids", []
       model.refList "_#{type}List", "_user.tasks", "_user.#{type}Ids"
-    user.set('.stats.hp', 50)
-    user.set('.stats.money', 0)
-    user.set('.stats.exp', 0)
-    user.set('.stats.lvl', 1)
-    user.set('.items.armor',0)
-    user.set('.items.weapon',0)
+    user.set 'stats',
+      hp: 50
+      money: 0
+      exp: 0
+      lvl: 1
+    user.set 'items',
+      armor: 0
+      weapon: 0
     user.set('.balance', 2) if user.get('balance') < 2 #only if they haven't manually bought tokens
 
   exports.closeKickstarterNofitication = (e, el) ->
