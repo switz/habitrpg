@@ -90,7 +90,7 @@ mongo_store = new MongoStore {url: process.env.NODE_DB_URI}, ->
     .use(store.modelMiddleware())
     # Middelware can be inserted after the modelMiddleware and before
     # the app router to pass server accessible data to a model
-    .use(priv.middleware)
+    .use(priv.stripeMiddleware)
 
     # HabitRPG Custom Middleware
     .use (req, res, next) ->
@@ -108,10 +108,9 @@ mongo_store = new MongoStore {url: process.env.NODE_DB_URI}, ->
     .use('/v1', require('./api').middleware)
     .use(require('./static').middleware)
     .use(require('./deprecated').middleware)
+    .use(priv.middleware)
     .use(expressApp.router)
     .use(serverError root)
-
-  priv.routes(expressApp)
 
   # Errors
   expressApp.all '*', (req) ->
