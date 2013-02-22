@@ -34,11 +34,12 @@ router.get '/user', (req, res) ->
     return res.json 500, NO_USER_FOUND if !self || _.isEmpty(self)
 
     return res.json self
-  res.json {err: 'Something went wrong'}
 
 router.post '/task', (req, res) ->
-  { uid, token } = req.body
+  { uid, token, type, text, notes } = req.body
   return res.json 500, NO_TOKEN_OR_UID unless uid || token
+  # Don't add a blank task
+  return res.json err: "Task text entered was an empty string." if /^(\s)*$/.test(text)
 
   model = req.getModel()
   query = model.query('users').withIdAndToken(uid, token)
@@ -48,8 +49,24 @@ router.post '/task', (req, res) ->
     self = user.at(0).get()
     return res.json 500, NO_USER_FOUND if !self || _.isEmpty(self)
 
-    return res.json self
-  res.json {err: 'Something went wrong'}
+    newModel = model.at('_new' + type.charAt(0).toUpperCase() + type.slice(1))
+    text = newModel.get()
+
+    newModel.set ''
+    switch type
+
+      when 'habit'
+        list.unshift {type: type, text: text, notes: '', value: 0, up: true, down: true}
+
+      when 'reward'
+        list.unshift {type: type, text: text, notes: '', value: 20 }
+
+      when 'daily'
+        list.unshift {type: type, text: text, notes: '', value: 0, repeat:{su:true,m:true,t:true,w:true,th:true,f:true,s:true}, completed: false }
+
+      when 'todo'
+        list.unshift {type: type, text: text, notes: '', value: 0, completed: false }
+
 
 router.get '/user/calendar.ics', (req, res) ->
   #return next() #disable for now

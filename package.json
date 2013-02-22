@@ -25,10 +25,8 @@
     "icalendar": "git://github.com/lefnire/node-icalendar#master",
     "nodetime": "*",
     "resolve": "~0.2.3",
-    "request": "~2.14.0",
     "querystring": "~0.1.0",
-    "nock": "~0.15.2",
-    "superagent": "~0.12.4"
+    "supertest": "~0.5.1"
   },
   "private": true,
   "subdomain": "habitrpg",

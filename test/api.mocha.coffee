@@ -4,7 +4,7 @@ derby = require 'derby'
 racer = require 'racer'
 _ = require 'underscore'
 moment = require 'moment'
-request = require 'superagent'
+request = require('supertest')
 qs = require 'querystring'
 
 racer.use require 'racer-db-mongo'
@@ -24,7 +24,7 @@ config = require './config'
 model = null
 uuid = null
 taskPath = null
-baseURL = 'http://localhost:3000/api/v1'
+baseURL = '/api/v1'
 UID_AND_TOKEN =
   uid: config.uid
   token: config.token
@@ -82,18 +82,27 @@ modificationsLookup = (direction, options = {}) ->
 ###### Specs ######
 
 describe 'API', ->
+  app = null
   model = null
   user = null
   params = null
 
-  describe 'Without token or user id', ->
+  before (done) ->
+    require('coffee-script') # remove intermediate compilation requirement
+    app = require('../src/server')
 
+    app.listen 1337, ->
+      done()
+
+  describe 'Without token or user id', ->
     it '/api/v1/user', (done) ->
-      request.get("#{baseURL}/user")
+      request(app)
+        .get("/api/v1/user")
         .set('Accept', 'application/json')
-        .end (res) ->
-          assert.equal res.statusCode, 500
-          assert.ok JSON.parse(res.text).err
+        .expect(500)
+        .expect('text', 'No user found.')
+        .end (err, res) ->
+          return done(err) if err
           done()
 
   describe 'With token and user id', ->
@@ -110,15 +119,14 @@ describe 'API', ->
       params =
         uid: user.id
         token: user.apiToken
-      setTimeout ->
-        done()
-      , 800
+      done()
 
     ###
     test '/api/v1/user', (done) ->
-      console.log "#{baseURL}/user?#{qs.stringify(params)}"
+      console.log "/api/v1/user?#{qs.stringify(params)}"
       _.defer ->
-        request.get("#{baseURL}/user")
+        request(app)
+          .get("/api/v1/user")
           .set('Accept', 'application/json')
           .query(params)
           .on('error', (err) ->
@@ -131,15 +139,16 @@ describe 'API', ->
             done()
     ###
     it '/api/v1/task', (done) ->
-      request.post("#{baseURL}/task")
+      request(app)
+        .post("/api/v1/task")
         .set('Accept', 'application/json')
         .send(params)
         .on('error', (err) ->
           console.log 'err', err
         )
-        .end (res) ->
-          #console.log 'task', res.body
+        .expect(200)
+        .end (err, res) ->
+          return done(err) if err
           assert.ok !res.body.err
-          assert.equal res.statusCode, 200
           assert.ok res.body.tasks
           done()
