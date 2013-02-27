@@ -1,6 +1,7 @@
 _ = require 'underscore'
 request = require 'superagent'
 expect = require 'expect.js'
+utils = require 'derby-auth/utils'
 require 'coffee-script'
 
 ## monkey-patch expect.js for better diffs on mocha
@@ -42,6 +43,11 @@ describe 'API', ->
       model.set '_userId', uid = model.id()
       user = character.newUserObject()
       user.apiToken = model.id()
+      user.email = 'foo@bar.com'
+      #phish
+      user.password = 'da337d52075f55ba4b16636635e913f83854433d'
+      console.log user.password
+
       model.set "users.#{uid}", user
       # Crappy hack to let server start before tests run
       setTimeout done, 2000
@@ -78,6 +84,17 @@ describe 'API', ->
 
     beforeEach ->
       currentUser = user.get()
+
+    it '/api/v1/user/auth', (done) ->
+      request.post("#{baseURL}/user/auth")
+        .set('Accept', 'application/json')
+        .send(email: currentUser.email, password: 'phish')
+        .end (res) ->
+          expect(res.body.err).to.be undefined
+          expect(res.statusCode).to.be 200
+          expect(res.body.token).to.be currentUser.apiKey
+          expect(res.body.uid).to.be currentUser.id
+          done()
 
     it 'GET /api/v1/user', (done) ->
       request.get("#{baseURL}/user")

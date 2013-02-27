@@ -7,6 +7,7 @@ validator = require 'derby-auth/node_modules/validator'
 check = validator.check
 sanitize = validator.sanitize
 icalendar = require 'icalendar'
+utils = require 'derby-auth/utils'
 
 NO_TOKEN_OR_UID = err: "You must include a token and uid (user id) in your request"
 NO_USER_FOUND = err: "No user found."
@@ -38,6 +39,22 @@ auth = (req, res, next) ->
 
 router.get '/status', (req, res) ->
   res.json status: 'up'
+
+router.post '/user/auth', (req, res) ->
+  salt = utils.makeSalt()
+  email = req.body.email
+  hashed_password = utils.encryptPassword(req.body.password, salt)
+
+  model = req.getModel()
+  query = model.query('users').authenticate(email, hashed_password)
+
+  query.fetch (err, user) ->
+    return res.json 401, err: err if err
+    userObj = user.get()
+    console.log user.get(), hashed_password
+    return res.json 401, NO_USER_FOUND unless !userObj || _.isEmpty(userObj)
+
+    res.json 200, uid: userObj.id, token: userObj.apikey
 
 router.get '/user', auth, (req, res) ->
   self = req.userObj
