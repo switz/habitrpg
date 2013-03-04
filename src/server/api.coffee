@@ -35,7 +35,7 @@ auth = (req, res, next) ->
     req.user = user
     req.userObj = user.get()
 
-    return res.json 401, NO_USER_FOUND if !task || _.isEmpty(req.userObj)
+    return res.json 401, NO_USER_FOUND if !req.userObj || _.isEmpty(req.userObj)
     req._isServer = true
     next()
 
@@ -54,8 +54,7 @@ router.get '/user/task/:id', auth, (req, res) ->
 
 validateTask = (req, res, next) ->
   task = {}
-  { type, text, notes, value, up, down, completed } = req.body
-  newTask = { type, text, notes, value, up, down, completed }
+  newTask = { type, text, notes, value, up, down, completed } = req.body
 
   # If we're updating, get the task from the user
   if req.method is 'PUT'
@@ -64,10 +63,6 @@ validateTask = (req, res, next) ->
     # Strip for now
     type = undefined
     delete newTask.type
-    # Clear empty values
-    # TODO: Improve this by cleaning up newTask = {..} above.
-    for col, val of newTask
-      delete newTask[col] unless val
   else if req.method is 'POST'
     unless /^(habit|todo|daily|reward)$/.test type
       return res.json 400, err: 'type must be habit, todo, daily, or reward'
