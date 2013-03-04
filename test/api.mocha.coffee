@@ -82,9 +82,8 @@ describe 'API', ->
       user = model.at("users.#{uid}")
       currentUser = user.get()
       params =
-        title: 'Title'
         text: 'Text'
-        type: 'habit'
+        type: 'daily'
 
     beforeEach ->
       currentUser = user.get()
@@ -242,4 +241,21 @@ describe 'API', ->
             expect(res.body.length).to.equal tasks.length
             # Ensure that the two sets are equal
             expect(_.difference(_.pluck(res.body,'id'), _.pluck(tasks,'id')).length).to.equal 0
+            done()
+
+    it 'POST /api/v1/user/tasks/:taskId/:direction', (done) ->
+      tid = _.pluck(currentUser.tasks, 'id')[3]
+      request.post("#{baseURL}/user/tasks/#{tid}/up")
+        .set('Accept', 'application/json')
+        .set('X-API-User', currentUser.id)
+        .set('X-API-Key', currentUser.apiToken)
+        .end (res) ->
+          query = model.query('users').withIdAndToken(currentUser.id, currentUser.apiToken)
+          query.fetch (err, user) ->
+            expect(res.body.err).to.be undefined
+            expect(res.statusCode).to.be 200
+            expect(res.body.delta).to.be.above 0
+            # Remove delta to compare to user stats
+            delete res.body.delta
+            expect(res.body).to.eql user.get('stats')
             done()
