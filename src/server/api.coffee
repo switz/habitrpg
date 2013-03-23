@@ -4,6 +4,7 @@ router = new express.Router()
 scoring = require '../app/scoring'
 _ = require 'underscore'
 { tnl } = require '../app/algos'
+character = require '../app/character'
 validator = require 'derby-auth/node_modules/validator'
 check = validator.check
 sanitize = validator.sanitize
@@ -199,7 +200,13 @@ scoreTask = (req, res, next) ->
   # If task exists, set it's compltion
   if existingTask.get()
     # Set completed if type is daily or todo
-    existingTask.set 'completed', (direction is 'up') if /^(daily|todo)$/.test existingTask.get('type')
+    if /^(daily|todo)$/.test existingTask.get('type')
+      batch = new character.BatchUpdate(model)
+      batch.startTransaction()
+      batch.set "tasks.#{existingTask.get('id')}.completed", (direction is 'up')
+      completedFlag = true
+      delta = scoring.score model, id, direction, daysFailed, batch, true
+      return res.json { delta }
   else
     task =
       id: taskId
@@ -218,9 +225,8 @@ scoreTask = (req, res, next) ->
     model.refList "_#{type}List", "_user.tasks", "_user.#{type}Ids"
     model.at("_#{type}List").push task
 
-  delta = scoring.score(model, taskId, direction)
   result = model.get '_user.stats'
-  result.delta = delta
+  result.delta = scoring.score model, taskId, direction
   res.json result
 
 ###
