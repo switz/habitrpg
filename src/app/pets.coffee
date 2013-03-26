@@ -29,16 +29,25 @@ module.exports.app = (appExports, model) ->
     myFood = user.get 'items.food'
     egg = model.get '_feedEgg'
     eggs = user.get 'items.eggs'
+    myPets = user.get 'items.pets'
 
     foodIdx = myFood.indexOf foodName
     eggIdx = eggs.indexOf egg
 
     return alert "You don't own that food :\\" if foodIdx is -1
     return alert "You don't own that egg :\\" if eggIdx is -1
+    return alert "You already have that pet." if myPets and myPets.indexOf("#{egg.name}-#{foodName}") != -1
 
     user.push 'items.pets', egg.name + '-' + foodName
-    user.remove 'items.food', foodIdx, 1
-    user.remove 'items.eggs', eggIdx, 1
+
+    eggs.splice eggIdx, 1
+    myFood.splice foodIdx, 1
+    user.set 'items.eggs', eggs
+    user.set 'items.food', myFood
+
+    #FIXME Bug: this removes from the array properly in the browser, but on refresh is has removed all items from the arrays
+#    user.remove 'items.food', foodIdx, 1
+#    user.remove 'items.eggs', eggIdx, 1
 
   appExports.choosePet = (e, el) ->
     petArray = $(el).attr('data-pet').split '-'
@@ -72,5 +81,16 @@ module.exports.app = (appExports, model) ->
       if confirm "Buy this food with #{newFood.value} of your #{tokens} tokens?"
         user.push 'items.food', newFood.name
         user.set 'balance', (tokens - newFood.value) / 4
+    else
+      $('#more-tokens-modal').modal 'show'
+
+  appExports.buyEgg = (e, el) ->
+    name = $(el).attr 'data-egg'
+    newEgg = _.findWhere pets, name: name
+    tokens = user.get('balance') * 4
+    if tokens > newEgg.value
+      if confirm "Buy this egg with #{newEgg.value} of your #{tokens} tokens?"
+        user.push 'items.eggs', newEgg
+        user.set 'balance', (tokens - newEgg.value) / 4
     else
       $('#more-tokens-modal').modal 'show'
