@@ -35,7 +35,6 @@ module.exports.habitStore = store = derby.createStore
   db: {type: 'Mongo', uri: process.env.NODE_DB_URI, safe:true}
   listen: server
 
-ONE_YEAR = 1000 * 60 * 60 * 24 * 365
 TWO_WEEKS = 1000 * 60 * 60 * 24 * 14
 root = path.dirname path.dirname __dirname
 publicPath = path.join root, 'public'
@@ -60,7 +59,7 @@ mongo_store = new MongoStore {url: process.env.NODE_DB_URI}, ->
     .use(middleware.allowCrossDomain)
     .use(express.favicon("#{publicPath}/favicon.ico"))
     # Gzip static files and serve from memory
-    .use(gzippo.staticGzip(publicPath, maxAge: ONE_YEAR))
+    .use(middleware.gzip)
     # Gzip dynamically rendered content
     .use(express.compress())
     .use(express.bodyParser())
